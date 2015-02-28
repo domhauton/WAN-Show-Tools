@@ -7,6 +7,43 @@ import time
 import datetime
 parser = HTMLParser()
 
+def shortenLink(originalLink, length, flag = True, lencap = 0):
+	if(flag):
+		length = 5
+	length += 1
+	shortlinkbegin = 0;
+	modifiedLink1 = originalLink[originalLink.find("://")+3:]
+	indexOfWWW = modifiedLink1.find("www.");
+	if (indexOfWWW != -1):
+		modifiedLink1 = modifiedLink1[4:]
+	if (len(modifiedLink1) < 68):
+		return modifiedLink1
+	shortLinkEnd = -1;
+	for x in range(0, length):
+		shortLinkEndNew = modifiedLink1.find("/", shortLinkEnd+1)
+		if shortLinkEndNew == -1:
+			shortLinkEndNew = modifiedLink1.find(".html", shortLinkEnd+1)
+		if (shortLinkEndNew == -1):
+			shortLinkEndNew = len(modifiedLink1)
+		if((shortLinkEndNew - shortLinkEnd > 40) & flag):
+			base = shortenLink(originalLink, 0, False)
+			tail = modifiedLink1[shortLinkEnd+1:shortLinkEndNew]
+			if(lencap != 0):
+				tail = tail[7:]
+			tail = tail.replace("-", " ")
+			tail = tail.replace("_", " ")
+			baseLen = len(base);
+			tailLen = 68 - (baseLen+3+lencap)
+			if (tailLen > len(tail)):
+				return base + " - " + tail
+			return base + " - " + tail[:tailLen]
+		if(shortLinkEndNew == -1):
+			break
+		shortLinkEnd = shortLinkEndNew
+	if (shortLinkEnd == -1):
+		return modifiedLink1
+	return modifiedLink1[:shortLinkEnd]
+
 f = open('sourcefile.txt', 'r')
 sourceArray = []
 for line in f:
@@ -19,6 +56,8 @@ currentTime = datetime.datetime.now()
 start_total_unix_time = time.mktime(currentTime.timetuple())
 print("Completed:")
 errors = "";
+topicCounter = 1
+mainLinkCounter = 1
 for url in sourceArray:
 	if("linustechtips.com" not in url):
 		errors += "Not linustechtips: " + url + "<br>";
@@ -48,12 +87,12 @@ for url in sourceArray:
 			exit(5);
 	#extractedTitle = parser.unescape(downloadedpage[indexOfStart+35: indexOfEnd])
 	extractedTitle = downloadedpage[indexOfStart+35: indexOfEnd]
-	extractedTitle = (extractedTitle[:extractedTitle.find("- Tech News and Reviews")]).title()
+	extractedTitle = (extractedTitle[:extractedTitle.find("- Tech News and Reviews")])
 	#stringToWrite = "Topic "+ str(counter) + "\n" + extractedTitle + "\nSource 1: linustechtips.com "
 	if (url[-1] != '/'):
 		url = url[:-1]
-	stringToWrite = "<h2>" + extractedTitle + "</h2>\nSource 1: <a href=\"" + url + "\">linustechtips.com</a>"
-	
+	modifiedUrl = shortenLink(url, 3)
+	stringToWrite = "<h2>" + extractedTitle + "</h2>Source 1: <a href=\"" + url + "\">" + modifiedUrl + "</a>"
 	
 	#<link rel='author' href='http://linustechtips.com/main/user/82552-ren/' />
 	indexOfStart = downloadedpage.find("<link rel='author' href=")
@@ -69,6 +108,10 @@ for url in sourceArray:
 	op = op.replace("-", " ")
 	# uppercase all words
 	op = op.title()
+	
+	modifiedUrl = shortenLink(url, 3, True, len(op))
+	stringToWrite = "<h2>" + extractedTitle + "</h2>Source 1: <a href=\"" + url + "\">" + modifiedUrl + "</a>"
+	
 	stringToWrite += " OP: <a href=\"" + downloadedpage[indexOfStart+25: indexOfEnd-3] +"\">" + op + "</a>\n"
 	# crawl opening post for links
 	indexOfStart = downloadedpage.find("<div itemprop=\"commentText\" class='post entry-content '>")
@@ -100,16 +143,14 @@ for url in sourceArray:
 			linkstart = linkend
 	linkcounter = 1
 	linklist = list(set(linklist));
+	mainLinkCounter = 2
 	for link in linklist:
 		linkcounter +=1
-		shortlinkbegin = 0;
-		templink = link[link.find("://")+3:]
-		tempnum = templink.find("www.");
-		if (tempnum != -1):
-			templink = templink[4:]
-		templink = templink[:templink.find("/")]
-		stringToWrite += "\n<br>Source " + str(linkcounter) + ": <a href=\"" + link + "\">" + templink + "</a>"
-#Create a printout to console to show the time taken
+		templink = shortenLink(link, 2)
+		stringToWrite += "\n<br>Source " + str(linkcounter) + ": <a href=\"" + link + "\">" +templink + "</a>"
+		mainLinkCounter += 1
+	topicCounter += 1;
+	#Create a printout to console to show the time taken
 	currentTime = datetime.datetime.now()
 	end_unix_time = time.mktime(currentTime.timetuple())
 	timeTaken = end_unix_time - start_unix_time;
@@ -122,8 +163,8 @@ f.write("</html>")
 f.close()
 currentTime = datetime.datetime.now()
 end_total_unix_time = time.mktime(currentTime.timetuple())
-timetaken = end_total_unix_time - start_total_unix_time
+timetaken = float(end_total_unix_time) - float(start_total_unix_time)
 print("Time taken to compile " + str(len(sourceArray)) + " source/s: " + str(timetaken) + " second/s.\nPress any enter to exit...");
-input()
+raw_input()
 	
 	

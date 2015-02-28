@@ -1,4 +1,5 @@
 WAN Show Doc Creation Tool
+Requirements: Install Python 2.7
 
 1. Create a file called source.txt in the pwd.
 2. Fill the sourcefile.txt file with links to the forum news section.
