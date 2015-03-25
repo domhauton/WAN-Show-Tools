@@ -8,7 +8,7 @@ f.write("The show started at " + str(starttime.hour) + ":" + str(starttime.minut
 start_unix_time = time.mktime(starttime.timetuple())
 latesttimestamp = "";
 while latesttimestamp != "END":
-	latesttimestamp = input("Enter new topic title: ")
+	latesttimestamp = raw_input("Enter new topic title: ")
 	currenttime = datetime.datetime.now()
 	current_unix_time = time.mktime(currenttime.timetuple())
 	timefromstart = int(current_unix_time - start_unix_time)
@@ -24,6 +24,6 @@ while latesttimestamp != "END":
 	seconds = str(seconds)
 	if len(seconds) == 1:
 		seconds = "0" + seconds
-	f.write(hours + ":" + minutes + ":" + seconds + " - " + latesttimestamp + "\n");
+	f.write(hours + ":" + str(minutes) + ":" + str(seconds) + " - " + str(latesttimestamp) + "\n");
 	f.flush();
 f.close();
